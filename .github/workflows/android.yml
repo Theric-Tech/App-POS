@@ -1,9 +1,7 @@
-name: Android CI
+name: CI #1 - Feature Validation
 
 on:
   pull_request:
-    branches: [ dev, main ]
-  push:
     branches: [ dev ]
 
 jobs:
@@ -23,12 +21,5 @@ jobs:
       - name: Dar permissão ao Gradle
         run: chmod +x ./gradlew
 
-      - name: Build do app
+      - name: Build de validação (Debug)
         run: ./gradlew assembleDebug
-
-      - name: Upload do APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: apk-debug
-          path: app/build/outputs/apk/debug/*.apk
-
