@@ -29,3 +29,20 @@ jobs:
         with:
           name: apk-dev-debug
           path: app/build/outputs/apk/debug/*.apk
+
+
+
+          - name: Validar origem do PR (feature/* → dev)
+  if: github.event_name == 'pull_request'
+  run: |
+    BASE="${{ github.base_ref }}"
+    HEAD="${{ github.head_ref }}"
+
+    if [[ "$BASE" != "dev" ]]; then
+      exit 0
+    fi
+
+    if [[ ! "$HEAD" =~ ^feature/ ]]; then
+      echo "ERRO: PR para 'dev' deve ter origem em 'feature/*'"
+      exit 1
+    fi
