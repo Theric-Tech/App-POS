@@ -31,3 +31,22 @@ jobs:
 
       - name: Build de validação (Release)
         run: ./gradlew assembleRelease
+
+- name: Validar origem do PR (release/* → main)
+  if: github.event_name == 'pull_request'
+  run: |
+    BASE="${{ github.base_ref }}"
+    HEAD="${{ github.head_ref }}"
+
+    echo "Base branch: $BASE"
+    echo "Head branch: $HEAD"
+
+    if [[ "$BASE" != "main" ]]; then
+      echo "Check ignorado (não é PR para main)"
+      exit 0
+    fi
+
+    if [[ ! "$HEAD" =~ ^release/ ]]; then
+      echo "ERRO: PR para 'main' deve ter origem em 'release/*'"
+      exit 1
+    fi
