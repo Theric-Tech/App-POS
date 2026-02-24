@@ -1,0 +1,32 @@
+name: CI #3 - Release Candidate
+
+on:
+  push:
+    branches:
+      - release/*
+
+jobs:
+  build-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      - name: Configurar Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Dar permissão ao Gradle
+        run: chmod +x ./gradlew
+
+      - name: Build Release (unsigned)
+        run: ./gradlew assembleRelease
+
+      - name: Upload APK Release Candidate
+        uses: actions/upload-artifact@v4
+        with:
+          name: apk-release-candidate
+          path: app/build/outputs/apk/release/*.apk
