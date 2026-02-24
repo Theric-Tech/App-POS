@@ -30,3 +30,18 @@ jobs:
         with:
           name: apk-release-candidate
           path: app/build/outputs/apk/release/*.apk
+
+- name: Validar origem do PR (dev → release)
+  if: github.event_name == 'pull_request'
+  run: |
+    BASE="${{ github.base_ref }}"
+    HEAD="${{ github.head_ref }}"
+
+    if [[ ! "$BASE" =~ ^release/ ]]; then
+      exit 0
+    fi
+
+    if [[ "$HEAD" != "dev" ]]; then
+      echo "ERRO: PR para 'release/*' deve ter origem em 'dev'"
+      exit 1
+    fi
