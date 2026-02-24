@@ -1,0 +1,33 @@
+name: CI - Main Validation
+
+on:
+  pull_request:
+    branches: [ main ]
+  push:
+    branches: [ main ]
+
+jobs:
+  validate-main:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      - name: Configurar Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Permissão Gradle
+        run: chmod +x ./gradlew
+
+      - name: Testes unitários
+        run: ./gradlew testDebugUnitTest
+
+      - name: Lint
+        run: ./gradlew lint
+
+      - name: Build de validação (Release)
+        run: ./gradlew assembleRelease
