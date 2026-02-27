@@ -50,3 +50,8 @@ jobs:
       echo "ERRO: PR para 'main' deve ter origem em 'release/*'"
       exit 1
     fi
+
+if [[ ! "$HEAD" =~ ^(release/|hotfix/) ]]; then
+  echo "ERRO: PR para 'main' deve vir de 'release/*' ou 'hotfix/*'"
+  exit 1
+fi
