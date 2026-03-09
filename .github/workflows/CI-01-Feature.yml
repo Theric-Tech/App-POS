@@ -2,7 +2,7 @@ name: CI #1 - Feature Validation
 
 on:
   pull_request:
-    branches: [ dev ]
+    branches: [ feature/* ]
 
 jobs:
   build:
