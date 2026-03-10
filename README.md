@@ -8,3 +8,5 @@ CI 01 - Roda np pull
 > config inválida
 > 
 > 
+> 
+> Alteração apos implemetar CI na feature e ativar rulesets
