@@ -1,25 +1,32 @@
 name: CI #1 - Feature Validation
 
 on:
-  pull_request:
-    branches: [ feature/* ]
+  push:
+    branches:
+      - 'feature/*'
+
+concurrency:
+  group: ci-feature-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  build:
+
+  setup:
+    name: Setup and Validate Environment
+    uses: ./.github/workflows/android-ci-base.yml
+
+  build-feature:
+
+    name: Build Feature Branch
+
     runs-on: ubuntu-latest
 
+    needs: setup
+
     steps:
-      - name: Checkout do código
+
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Configurar Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-
-      - name: Dar permissão ao Gradle
-        run: chmod +x ./gradlew
-
-      - name: Build de validação (Debug)
-        run: ./gradlew assembleDebug
+      - name: Build Debug APK
+        run: ./gradlew assembleDebug --no-daemon --stacktrace
