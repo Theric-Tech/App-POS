@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Release version"
+        description: "Release version (ex: 1.2)"
         required: true
 
 permissions:
@@ -12,15 +12,34 @@ permissions:
 
 jobs:
   create-release:
+
     runs-on: ubuntu-latest
 
     steps:
+
       - name: Checkout dev
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           ref: dev
+          fetch-depth: 0
+
+      - name: Check if release branch already exists
+        run: |
+          VERSION=${{ github.event.inputs.version }}
+          if git ls-remote --exit-code --heads origin release/$VERSION; then
+            echo "❌ Branch release/$VERSION already exists."
+            exit 1
+          else
+            echo "✅ Branch release/$VERSION does not exist. Continuing."
+          fi
+
+      - name: Ensure dev is up to date
+        run: |
+          git fetch origin dev
+          git reset --hard origin/dev
 
       - name: Create release branch
         run: |
-          git checkout -b release/${{ github.event.inputs.version }}
-          git push origin release/${{ github.event.inputs.version }}
+          VERSION=${{ github.event.inputs.version }}
+          git checkout -b release/$VERSION
+          git push origin release/$VERSION
