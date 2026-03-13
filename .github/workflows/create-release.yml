@@ -4,8 +4,11 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Release version (ex: 2.7)"
+        description: "Release version"
         required: true
+
+permissions:
+  contents: write
 
 jobs:
   create-release:
