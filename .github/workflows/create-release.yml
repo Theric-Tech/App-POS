@@ -11,6 +11,7 @@ permissions:
   contents: write
 
 jobs:
+
   create-release:
 
     runs-on: ubuntu-latest
@@ -27,32 +28,25 @@ jobs:
           VERSION=${{ github.event.inputs.version }}
 
           if [[ $VERSION == release/* ]]; then
-            echo "❌ Informe apenas a versão (ex: 1.2), não use 'release/'."
+            echo "❌ Informe apenas a versão (ex: 1.2)"
             exit 1
           fi
 
-          echo "✅ Versão informada: $VERSION"
-
-      - name: Check if release branch already exists
+      - name: Check if release already exists
         run: |
           VERSION=${{ github.event.inputs.version }}
 
           if git ls-remote --exit-code --heads origin release/$VERSION; then
-            echo "❌ Branch release/$VERSION já existe."
+            echo "❌ release/$VERSION já existe"
             exit 1
-          else
-            echo "✅ Branch release/$VERSION não existe. Continuando."
           fi
 
-      - name: Fetch latest branches
+      - name: Fetch branches
         run: git fetch origin
 
-      - name: Create release branch from origin/dev
+      - name: Create release branch
         run: |
           VERSION=${{ github.event.inputs.version }}
 
           git checkout -b release/$VERSION origin/dev
           git push origin release/$VERSION
-
-      - name: Success
-        run: echo "✅ Release release/${{ github.event.inputs.version }} criada com sucesso."
