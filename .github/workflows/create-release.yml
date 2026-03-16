@@ -17,29 +17,42 @@ jobs:
 
     steps:
 
-      - name: Checkout dev
+      - name: Checkout repository
         uses: actions/checkout@v5
         with:
-          ref: dev
           fetch-depth: 0
+
+      - name: Validate version input
+        run: |
+          VERSION=${{ github.event.inputs.version }}
+
+          if [[ $VERSION == release/* ]]; then
+            echo "❌ Informe apenas a versão (ex: 1.2), não use 'release/'."
+            exit 1
+          fi
+
+          echo "✅ Versão informada: $VERSION"
 
       - name: Check if release branch already exists
         run: |
           VERSION=${{ github.event.inputs.version }}
+
           if git ls-remote --exit-code --heads origin release/$VERSION; then
-            echo "❌ Branch release/$VERSION already exists."
+            echo "❌ Branch release/$VERSION já existe."
             exit 1
           else
-            echo "✅ Branch release/$VERSION does not exist. Continuing."
+            echo "✅ Branch release/$VERSION não existe. Continuando."
           fi
 
-      - name: Ensure dev is up to date
-        run: |
-          git fetch origin dev
-          git reset --hard origin/dev
+      - name: Fetch latest branches
+        run: git fetch origin
 
-      - name: Create release branch
+      - name: Create release branch from origin/dev
         run: |
           VERSION=${{ github.event.inputs.version }}
-          git checkout -b release/$VERSION
+
+          git checkout -b release/$VERSION origin/dev
           git push origin release/$VERSION
+
+      - name: Success
+        run: echo "✅ Release release/${{ github.event.inputs.version }} criada com sucesso."
