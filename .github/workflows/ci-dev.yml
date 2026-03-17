@@ -55,7 +55,7 @@ jobs:
         uses: actions/checkout@v5
 
       - name: Setup base
-        uses: ./.github/workflows/CI-00-Base.yml
+        uses: ./.github/workflows/ci-base.yml
 
       - name: Build Debug APK
         run: ./gradlew assembleDebug --no-daemon --stacktrace
