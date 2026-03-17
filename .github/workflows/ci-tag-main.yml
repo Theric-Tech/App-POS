@@ -24,14 +24,30 @@ jobs:
           TAG=${GITHUB_REF#refs/tags/}
           echo "TAG=$TAG" >> $GITHUB_ENV
 
-      - name: Download artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: artifacts
+      - name: Find latest RC release
+        id: find_rc
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          RC_TAG=$(gh release list \
+            --limit 1 \
+            --json tagName,isDraft \
+            --jq '.[] | select(.isDraft==true) | .tagName' | head -n 1)
 
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ env.TAG }}
-          name: Release ${{ env.TAG }}
-          files: artifacts/**/*.apk
+          if [ -z "$RC_TAG" ]; then
+            echo "❌ Nenhum RC encontrado"
+            exit 1
+          fi
+
+          echo "RC_TAG=$RC_TAG" >> $GITHUB_ENV
+          echo "Using RC: $RC_TAG"
+
+      - name: Promote RC to official release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release edit "$RC_TAG" \
+            --tag "$TAG" \
+            --title "Release $TAG" \
+            --draft=false \
+            --prerelease=false
