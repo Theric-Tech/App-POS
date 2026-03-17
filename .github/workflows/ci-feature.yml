@@ -11,22 +11,19 @@ concurrency:
 
 jobs:
 
-  setup:
-    name: Setup and Validate Environment
-    uses: ./.github/workflows/ci-base.yml
-
   build-feature:
 
     name: Build Feature Branch
 
     runs-on: ubuntu-latest
 
-    needs: setup
-
     steps:
 
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
+
+      - name: Setup base
+        uses: ./.github/workflows/ci-base.yml
 
       - name: Build Debug APK
         run: ./gradlew assembleDebug --no-daemon --stacktrace
