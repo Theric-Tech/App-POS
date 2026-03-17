@@ -16,7 +16,6 @@ on:
       branch:
         description: "Branch para build (ex: release/1.2)"
         required: false
-        type: string
 
 concurrency:
   group: build-artifact-${{ github.ref }}
@@ -35,22 +34,13 @@ jobs:
         with:
           ref: ${{ inputs.branch || github.ref_name }}
 
-      - name: Resolve branch
+      - name: Resolve branch name
+        id: branch
         run: |
-          BRANCH="${{ github.ref_name }}"
-
           if [ -n "${{ inputs.branch }}" ]; then
-            BRANCH="${{ inputs.branch }}"
-          fi
-
-          echo "BRANCH=$BRANCH" >> $GITHUB_ENV
-          echo "Using branch: $BRANCH"
-
-      - name: Validate release branch
-        run: |
-          if [[ ! "$BRANCH" =~ ^release/ ]]; then
-            echo "❌ Este workflow só pode rodar para release/*"
-            exit 1
+            echo "BRANCH=${{ inputs.branch }}" >> $GITHUB_ENV
+          else
+            echo "BRANCH=${GITHUB_REF#refs/heads/}" >> $GITHUB_ENV
           fi
 
       - name: Extract version from branch
@@ -69,9 +59,6 @@ jobs:
           echo "VERSION_CODE=$VERSION_CODE" >> $GITHUB_ENV
           echo "SHORT_SHA=$SHORT_SHA" >> $GITHUB_ENV
 
-          echo "Version Name: $VERSION_NAME"
-          echo "Version Code: $VERSION_CODE"
-
       - name: Setup base
         uses: ./.github/workflows/ci-base.yml
 
@@ -81,6 +68,7 @@ jobs:
       - name: Rename APK
         run: |
           APK=$(find app/build/outputs/apk/release -name "*.apk" | head -n 1)
+
           NAME="app-${VERSION_NAME}-${SHORT_SHA}.apk"
 
           mv "$APK" "$NAME"
@@ -92,3 +80,12 @@ jobs:
         with:
           name: ${{ env.APK_NAME }}
           path: ${{ env.APK_NAME }}
+
+      - name: Upload pre-release (RC draft)
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: rc-${{ github.run_id }}
+          name: RC ${{ env.VERSION_NAME }}
+          draft: true
+          prerelease: true
+          files: ${{ env.APK_NAME }}
