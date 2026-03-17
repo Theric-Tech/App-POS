@@ -33,12 +33,6 @@ jobs:
             exit 1
           fi
 
-  build:
-
-    needs: validate-source-branch
-    if: github.event.action != 'closed'
-    uses: ./.github/workflows/build-artifact.yml
-
   sync-release-to-dev:
 
     runs-on: ubuntu-latest
