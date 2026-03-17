@@ -13,7 +13,7 @@ jobs:
 
   setup:
     name: Setup and Validate Environment
-    uses: ./.github/workflows/android-ci-base.yml
+    uses: ./.github/workflows/ci-base.yml
 
   build-feature:
 
