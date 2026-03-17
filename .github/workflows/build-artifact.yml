@@ -1,7 +1,21 @@
 name: Build Artifact
 
 on:
+  push:
+    branches:
+      - "release/*"
+
   workflow_call:
+
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: "Branch para build (ex: release/1.2)"
+        required: false
+
+concurrency:
+  group: build-artifact-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
 
@@ -13,11 +27,18 @@ jobs:
 
       - name: Checkout code
         uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.branch || github.ref_name }}
 
       - name: Extract version from branch
         run: |
-
           BRANCH=${GITHUB_REF#refs/heads/}
+
+          # fallback se vier de input manual
+          if [ -n "${{ inputs.branch }}" ]; then
+            BRANCH="${{ inputs.branch }}"
+          fi
+
           VERSION_BASE=${BRANCH#release/}
 
           VERSION_NAME="${VERSION_BASE}.0-rc${GITHUB_RUN_NUMBER}"
@@ -33,14 +54,13 @@ jobs:
           echo "SHORT_SHA=$SHORT_SHA" >> $GITHUB_ENV
 
       - name: Setup base
-        uses: ./.github/workflows/ci-base.yml
+        uses: ./.github/workflows/CI-00-Base.yml
 
       - name: Build APK
         run: ./gradlew assembleRelease
 
       - name: Rename APK
         run: |
-
           APK=$(find app/build/outputs/apk/release -name "*.apk" | head -n 1)
           NAME="app-${VERSION_NAME}-${SHORT_SHA}.apk"
 
