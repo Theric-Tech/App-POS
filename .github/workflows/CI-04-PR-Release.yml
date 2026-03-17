@@ -18,76 +18,45 @@ jobs:
 
   validate-source-branch:
 
-    name: Validate PR source branch
     runs-on: ubuntu-latest
 
     if: github.event.action != 'closed'
 
     steps:
-      - name: Validate branch name
+      - name: Validate branch
         run: |
 
           SOURCE=${{ github.event.pull_request.head.ref }}
 
-          echo "Source branch: $SOURCE"
-
           if [[ "$SOURCE" != fix/* ]]; then
-            echo "❌ PR para release só pode vir de branch fix/*"
+            echo "❌ Apenas fix/* pode ir para release"
             exit 1
           fi
 
-          echo "✅ Branch válida"
+  build:
 
-
-  setup:
-
-    name: Setup Environment
     needs: validate-source-branch
-    uses: ./.github/workflows/ci-base.yml
-
-
-  build-release:
-
-    name: Build Release
-    runs-on: ubuntu-latest
-    needs: setup
-
     if: github.event.action != 'closed'
-
-    steps:
-
-      - name: Checkout code
-        uses: actions/checkout@v5
-
-      - name: Grant execute permission for gradlew
-        run: chmod +x ./gradlew
-
-      - name: Build release
-        run: ./gradlew assembleRelease
-
+    uses: ./.github/workflows/build-artifact.yml
 
   sync-release-to-dev:
 
-    name: Sync Release Back to Dev
     runs-on: ubuntu-latest
-
     if: github.event.pull_request.merged == true
 
     steps:
 
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
-      - name: Create PR from release to dev
+      - name: Create PR back to dev
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
 
           RELEASE_BRANCH=${{ github.event.pull_request.base.ref }}
-
-          echo "Checking if PR already exists..."
 
           EXISTING=$(gh pr list \
             --base dev \
@@ -97,14 +66,12 @@ jobs:
             --jq 'length')
 
           if [ "$EXISTING" -gt 0 ]; then
-            echo "PR already exists."
+            echo "PR já existe"
             exit 0
           fi
-
-          echo "Creating PR from $RELEASE_BRANCH to dev"
 
           gh pr create \
             --base dev \
             --head $RELEASE_BRANCH \
             --title "Sync $RELEASE_BRANCH back to dev" \
-            --body "Automatic PR to sync fixes from $RELEASE_BRANCH back to dev."
+            --body "Auto sync release → dev"
