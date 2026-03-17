@@ -2,47 +2,66 @@ name: CI #2 - DEV Integration
 
 on:
   push:
-    branches: [ dev ]
+    branches:
+      - dev
+
+  pull_request:
+    branches:
+      - dev
+
+concurrency:
+  group: ci-dev-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  build-dev:
+
+  validate-pr:
+
+    name: Validate PR Source
+
+    if: github.event_name == 'pull_request'
+
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout do código
-        uses: actions/checkout@v4
+      - name: Validate origin (feature/* → dev)
+        run: |
+          BASE="${{ github.base_ref }}"
+          HEAD="${{ github.head_ref }}"
 
-      - name: Configurar Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '17'
+          echo "Base branch: $BASE"
+          echo "Head branch: $HEAD"
 
-      - name: Dar permissão ao Gradle
-        run: chmod +x ./gradlew
+          if [[ "$BASE" != "dev" ]]; then
+            exit 0
+          fi
 
-      - name: Build DEV (Debug)
-        run: ./gradlew assembleDebug
+          if [[ ! "$HEAD" =~ ^feature/ ]]; then
+            echo "❌ ERRO: PR para 'dev' deve ter origem em 'feature/*'"
+            exit 1
+          fi
+
+  build-dev:
+
+    name: Build DEV APK
+
+    runs-on: ubuntu-latest
+
+    needs: [validate-pr]
+
+    steps:
+
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Setup base
+        uses: ./.github/workflows/CI-00-Base.yml
+
+      - name: Build Debug APK
+        run: ./gradlew assembleDebug --no-daemon --stacktrace
 
       - name: Upload APK DEV
         uses: actions/upload-artifact@v4
         with:
           name: apk-dev-debug
           path: app/build/outputs/apk/debug/*.apk
-
-
-
-          - name: Validar origem do PR (feature/* → dev)
-  if: github.event_name == 'pull_request'
-  run: |
-    BASE="${{ github.base_ref }}"
-    HEAD="${{ github.head_ref }}"
-
-    if [[ "$BASE" != "dev" ]]; then
-      exit 0
-    fi
-
-    if [[ ! "$HEAD" =~ ^feature/ ]]; then
-      echo "ERRO: PR para 'dev' deve ter origem em 'feature/*'"
-      exit 1
-    fi
