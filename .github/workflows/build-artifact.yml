@@ -54,7 +54,7 @@ jobs:
           echo "SHORT_SHA=$SHORT_SHA" >> $GITHUB_ENV
 
       - name: Setup base
-        uses: ./.github/workflows/CI-00-Base.yml
+        uses: ./.github/workflows/ci-base.yml
 
       - name: Build APK
         run: ./gradlew assembleRelease
