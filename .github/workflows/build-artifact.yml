@@ -84,7 +84,7 @@ jobs:
       - name: Upload pre-release (RC draft)
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: rc-${{ github.run_id }}
+          tag_name: rc-${{ env.VERSION_NAME }}-${{ env.SHORT_SHA }}
           name: RC ${{ env.VERSION_NAME }}
           draft: true
           prerelease: true
