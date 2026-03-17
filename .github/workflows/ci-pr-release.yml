@@ -27,8 +27,17 @@ jobs:
         run: |
 
           SOURCE=${{ github.event.pull_request.head.ref }}
+          TARGET=${{ github.event.pull_request.base.ref }}
 
-          if [[ "$SOURCE" != fix/* ]]; then
+          echo "Source: $SOURCE"
+          echo "Target: $TARGET"
+
+          if [[ ! "$TARGET" =~ ^release/ ]]; then
+            echo "❌ Destino deve ser release/*"
+            exit 1
+          fi
+
+          if [[ ! "$SOURCE" =~ ^fix/ ]]; then
             echo "❌ Apenas fix/* pode ir para release"
             exit 1
           fi
