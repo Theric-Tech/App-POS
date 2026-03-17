@@ -47,6 +47,7 @@ jobs:
 
     runs-on: ubuntu-latest
 
+    if: always()
     needs: [validate-pr]
 
     steps:
