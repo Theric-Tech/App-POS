@@ -6,12 +6,17 @@ on:
       - "release/*"
 
   workflow_call:
+    inputs:
+      branch:
+        required: false
+        type: string
 
   workflow_dispatch:
     inputs:
       branch:
         description: "Branch para build (ex: release/1.2)"
         required: false
+        type: string
 
 concurrency:
   group: build-artifact-${{ github.ref }}
@@ -30,15 +35,26 @@ jobs:
         with:
           ref: ${{ inputs.branch || github.ref_name }}
 
-      - name: Extract version from branch
+      - name: Resolve branch
         run: |
-          BRANCH=${GITHUB_REF#refs/heads/}
+          BRANCH="${{ github.ref_name }}"
 
-          # fallback se vier de input manual
           if [ -n "${{ inputs.branch }}" ]; then
             BRANCH="${{ inputs.branch }}"
           fi
 
+          echo "BRANCH=$BRANCH" >> $GITHUB_ENV
+          echo "Using branch: $BRANCH"
+
+      - name: Validate release branch
+        run: |
+          if [[ ! "$BRANCH" =~ ^release/ ]]; then
+            echo "❌ Este workflow só pode rodar para release/*"
+            exit 1
+          fi
+
+      - name: Extract version from branch
+        run: |
           VERSION_BASE=${BRANCH#release/}
 
           VERSION_NAME="${VERSION_BASE}.0-rc${GITHUB_RUN_NUMBER}"
@@ -53,11 +69,14 @@ jobs:
           echo "VERSION_CODE=$VERSION_CODE" >> $GITHUB_ENV
           echo "SHORT_SHA=$SHORT_SHA" >> $GITHUB_ENV
 
+          echo "Version Name: $VERSION_NAME"
+          echo "Version Code: $VERSION_CODE"
+
       - name: Setup base
         uses: ./.github/workflows/ci-base.yml
 
       - name: Build APK
-        run: ./gradlew assembleRelease
+        run: ./gradlew assembleRelease --no-daemon --stacktrace
 
       - name: Rename APK
         run: |
