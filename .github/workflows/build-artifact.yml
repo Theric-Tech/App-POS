@@ -35,7 +35,6 @@ jobs:
           ref: ${{ inputs.branch != '' && inputs.branch || github.ref }}
 
       - name: Resolve branch name
-        id: branch
         run: |
           if [ -n "${{ inputs.branch }}" ]; then
             echo "BRANCH=${{ inputs.branch }}" >> $GITHUB_ENV
@@ -62,8 +61,13 @@ jobs:
       - name: Setup base
         uses: ./.github/workflows/ci-base.yml
 
+      # 🔥 AQUI ESTÁ O AJUSTE IMPORTANTE
       - name: Build APK
-        run: ./gradlew assembleRelease --no-daemon --stacktrace
+        run: |
+          ./gradlew assembleRelease \
+            -PVERSION_CODE=${{ env.VERSION_CODE }} \
+            -PVERSION_NAME=${{ env.VERSION_NAME }} \
+            --no-daemon --stacktrace
 
       - name: Rename APK
         run: |
