@@ -1,0 +1,95 @@
+name: Build Artifact
+
+on:
+  push:
+    branches:
+      - "release/*"
+
+  workflow_call:
+    inputs:
+      branch:
+        required: false
+        type: string
+
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: "Branch para build (ex: release/1.2)"
+        required: false
+
+concurrency:
+  group: build-artifact-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout code
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.branch != '' && inputs.branch || github.ref }}
+
+      - name: Resolve branch name
+        run: |
+          if [ -n "${{ inputs.branch }}" ]; then
+            echo "BRANCH=${{ inputs.branch }}" >> $GITHUB_ENV
+          else
+            echo "BRANCH=${GITHUB_REF#refs/heads/}" >> $GITHUB_ENV
+          fi
+
+      - name: Extract version from branch
+        run: |
+          VERSION_BASE=${BRANCH#release/}
+
+          VERSION_NAME="${VERSION_BASE}.0-rc${GITHUB_RUN_NUMBER}"
+
+          IFS='.' read -r MAJOR MINOR <<< "$VERSION_BASE"
+          BASE_CODE=$(printf "%02d%02d00" $MAJOR $MINOR)
+          VERSION_CODE=$((BASE_CODE + GITHUB_RUN_NUMBER))
+
+          SHORT_SHA=$(git rev-parse --short HEAD)
+
+          echo "VERSION_NAME=$VERSION_NAME" >> $GITHUB_ENV
+          echo "VERSION_CODE=$VERSION_CODE" >> $GITHUB_ENV
+          echo "SHORT_SHA=$SHORT_SHA" >> $GITHUB_ENV
+
+      - name: Setup base
+        uses: ./.github/workflows/ci-base.yml
+
+      # 🔥 AQUI ESTÁ O AJUSTE IMPORTANTE
+      - name: Build APK
+        run: |
+          ./gradlew assembleRelease \
+            -PVERSION_CODE=${{ env.VERSION_CODE }} \
+            -PVERSION_NAME=${{ env.VERSION_NAME }} \
+            --no-daemon --stacktrace
+
+      - name: Rename APK
+        run: |
+          APK=$(find app/build/outputs/apk/release -name "*.apk" | head -n 1)
+
+          NAME="app-${VERSION_NAME}-${SHORT_SHA}.apk"
+
+          mv "$APK" "$NAME"
+
+          echo "APK_NAME=$NAME" >> $GITHUB_ENV
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.APK_NAME }}
+          path: ${{ env.APK_NAME }}
+
+      - name: Upload pre-release (RC draft)
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: rc-${{ env.VERSION_NAME }}-${{ env.SHORT_SHA }}
+          name: RC ${{ env.VERSION_NAME }}
+          draft: true
+          prerelease: true
+          files: ${{ env.APK_NAME }}

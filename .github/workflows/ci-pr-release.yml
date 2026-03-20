@@ -1,0 +1,80 @@
+name: CI PR Release
+
+on:
+  pull_request:
+    branches:
+      - "release/*"
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - closed
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+
+  validate-source-branch:
+
+    runs-on: ubuntu-latest
+
+    if: github.event.action != 'closed'
+
+    steps:
+      - name: Validate branch
+        run: |
+
+          SOURCE=${{ github.event.pull_request.head.ref }}
+          TARGET=${{ github.event.pull_request.base.ref }}
+
+          echo "Source: $SOURCE"
+          echo "Target: $TARGET"
+
+          if [[ ! "$TARGET" =~ ^release/ ]]; then
+            echo "❌ Destino deve ser release/*"
+            exit 1
+          fi
+
+          if [[ ! "$SOURCE" =~ ^fix/ ]]; then
+            echo "❌ Apenas fix/* pode ir para release"
+            exit 1
+          fi
+
+  sync-release-to-dev:
+
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == true
+
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Create PR back to dev
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+
+          RELEASE_BRANCH=${{ github.event.pull_request.base.ref }}
+
+          EXISTING=$(gh pr list \
+            --base dev \
+            --head $RELEASE_BRANCH \
+            --state open \
+            --json number \
+            --jq 'length')
+
+          if [ "$EXISTING" -gt 0 ]; then
+            echo "PR já existe"
+            exit 0
+          fi
+
+          gh pr create \
+            --base dev \
+            --head $RELEASE_BRANCH \
+            --title "Sync $RELEASE_BRANCH back to dev" \
+            --body "Auto sync release → dev"

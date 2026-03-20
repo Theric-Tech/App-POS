@@ -1,0 +1,29 @@
+name: CI #1 - Feature Validation
+
+on:
+  push:
+    branches:
+      - 'feature/*'
+
+concurrency:
+  group: ci-feature-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+
+  build-feature:
+
+    name: Build Feature Branch
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Setup base
+        uses: ./.github/workflows/ci-base.yml
+
+      - name: Build Debug APK
+        run: ./gradlew assembleDebug --no-daemon --stacktrace

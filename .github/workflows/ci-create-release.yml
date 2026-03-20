@@ -1,0 +1,52 @@
+name: Create Release Branch
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release version (ex: 1.2)"
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+
+  create-release:
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Validate version input
+        run: |
+          VERSION=${{ github.event.inputs.version }}
+
+          if [[ $VERSION == release/* ]]; then
+            echo "❌ Informe apenas a versão (ex: 1.2)"
+            exit 1
+          fi
+
+      - name: Check if release already exists
+        run: |
+          VERSION=${{ github.event.inputs.version }}
+
+          if git ls-remote --exit-code --heads origin release/$VERSION; then
+            echo "❌ release/$VERSION já existe"
+            exit 1
+          fi
+
+      - name: Fetch branches
+        run: git fetch origin
+
+      - name: Create release branch
+        run: |
+          VERSION=${{ github.event.inputs.version }}
+
+          git checkout -b release/$VERSION origin/dev
+          git push origin release/$VERSION

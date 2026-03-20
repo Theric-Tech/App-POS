@@ -8,15 +8,19 @@ android {
         version = release(36)
     }
 
-    defaultConfig {
-        applicationId = "com.kotlinimc"
-        minSdk = 24
-        targetSdk = 36
-        versionCode = 1
-        versionName = "1.0"
+defaultConfig {
+    applicationId = "com.kotlinimc"
+    minSdk = 24
+    targetSdk = 36
 
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-    }
+    val versionCodeProp = project.findProperty("VERSION_CODE")?.toString()
+    val versionNameProp = project.findProperty("VERSION_NAME")?.toString()
+
+    versionCode = versionCodeProp?.toInt() ?: 1
+    versionName = versionNameProp ?: "1.0"
+
+    testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+}
 
     buildTypes {
         release {
