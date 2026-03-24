@@ -1,4 +1,4 @@
-name: CI - Release Validation
+name: CI - Release
 
 on:
   pull_request:
@@ -11,7 +11,7 @@ concurrency:
 
 jobs:
   validate-release:
-
+    name: Validate Build (Release)
     runs-on: ubuntu-latest
 
     steps:
