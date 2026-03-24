@@ -1,4 +1,4 @@
-name: CI PR Release
+name: CI - Release Rules
 
 on:
   pull_request:
@@ -17,7 +17,7 @@ permissions:
 jobs:
 
   validate-source-branch:
-
+    name: Validate Source Branch (fix → release)
     runs-on: ubuntu-latest
 
     if: github.event.action != 'closed'
