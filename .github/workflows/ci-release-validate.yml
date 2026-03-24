@@ -1,0 +1,26 @@
+name: CI - Release Validation
+
+on:
+  pull_request:
+    branches:
+      - "release/*"
+
+concurrency:
+  group: ci-release-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate-release:
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Setup base
+        uses: ./.github/workflows/ci-base.yml
+
+      - name: Build Release (validation only)
+        run: ./gradlew assembleRelease --no-daemon --stacktrace
