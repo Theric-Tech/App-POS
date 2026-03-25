@@ -52,9 +52,6 @@ jobs:
 
     steps:
 
-      - name: Checkout code
-        uses: actions/checkout@v5
-
       - name: Setup base
         uses: ./.github/workflows/ci-base.yml
 
