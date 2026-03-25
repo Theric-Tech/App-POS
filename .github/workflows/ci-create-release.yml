@@ -14,7 +14,12 @@ jobs:
 
   create-release:
 
+    name: Create Release Branch
+
     runs-on: ubuntu-latest
+
+    outputs:
+      version: ${{ steps.set-version.outputs.version }}
 
     steps:
 
@@ -23,9 +28,15 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Validate version input
+      - name: Set version
+        id: set-version
         run: |
           VERSION=${{ github.event.inputs.version }}
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Validate version input
+        run: |
+          VERSION=${{ steps.set-version.outputs.version }}
 
           if [[ $VERSION == release/* ]]; then
             echo "❌ Informe apenas a versão (ex: 1.2)"
@@ -34,7 +45,7 @@ jobs:
 
       - name: Check if release already exists
         run: |
-          VERSION=${{ github.event.inputs.version }}
+          VERSION=${{ steps.set-version.outputs.version }}
 
           if git ls-remote --exit-code --heads origin release/$VERSION; then
             echo "❌ release/$VERSION já existe"
@@ -46,7 +57,19 @@ jobs:
 
       - name: Create release branch
         run: |
-          VERSION=${{ github.event.inputs.version }}
+          VERSION=${{ steps.set-version.outputs.version }}
 
           git checkout -b release/$VERSION origin/dev
           git push origin release/$VERSION
+
+  build-release:
+
+    name: Build Release
+
+    needs: create-release
+
+    uses: ./.github/workflows/build-artifact.yml
+
+    with:
+      # opcional, caso você queira passar a versão
+      version: ${{ needs.create-release.outputs.version }}
