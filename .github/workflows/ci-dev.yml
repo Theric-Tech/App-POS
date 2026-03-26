@@ -1,10 +1,6 @@
 name: CI #2 - DEV Integration
 
 on:
-  push:
-    branches:
-      - dev
-
   pull_request:
     branches:
       - dev
@@ -14,13 +10,9 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-
   validate-pr:
-
     name: Validate PR Source
-
     if: github.event_name == 'pull_request'
-
     runs-on: ubuntu-latest
 
     steps:
@@ -42,18 +34,13 @@ jobs:
           fi
 
   build-dev:
-
     name: Build DEV APK
-
     runs-on: ubuntu-latest
-
-    if: always()
     needs: [validate-pr]
+    if: success()
 
     steps:
-
-      - name: Setup base
-        uses: ./.github/workflows/ci-base.yml
+      - uses: ./.github/actions/ci-base
 
       - name: Build Debug APK
         run: ./gradlew assembleDebug --no-daemon --stacktrace
