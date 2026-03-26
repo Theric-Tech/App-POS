@@ -10,17 +10,12 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-
   build-feature:
-
     name: Build Feature Branch
-
     runs-on: ubuntu-latest
 
     steps:
-
-      - name: Setup base
-        uses: ./.github/workflows/ci-base.yml
+      - uses: ./.github/actions/ci-base
 
       - name: Build Debug APK
         run: ./gradlew assembleDebug --no-daemon --stacktrace
