@@ -11,18 +11,14 @@ permissions:
   contents: write
 
 jobs:
-
   create-release:
-
     name: Create Release Branch
-
     runs-on: ubuntu-latest
 
     outputs:
       version: ${{ steps.set-version.outputs.version }}
 
     steps:
-
       - name: Checkout repository
         uses: actions/checkout@v5
         with:
@@ -63,13 +59,9 @@ jobs:
           git push origin release/$VERSION
 
   build-release:
-
     name: Build Release
-
     needs: create-release
 
     uses: ./.github/workflows/build-artifact.yml
-
     with:
-      # opcional, caso você queira passar a versão
-      version: ${{ needs.create-release.outputs.version }}
+      branch: release/${{ needs.create-release.outputs.version }}
