@@ -9,42 +9,65 @@ permissions:
   contents: write
 
 jobs:
-
   promote:
-
     runs-on: ubuntu-latest
 
     steps:
-
-      - name: Checkout
-        uses: actions/checkout@v5
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
 
       - name: Extract tag
         run: |
           TAG=${GITHUB_REF#refs/tags/}
+          VERSION=${TAG#v}
           echo "TAG=$TAG" >> $GITHUB_ENV
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
 
-      - name: Find matching RC release
+      # 🔍 Descobrir release branch
+      - name: Find release branch
+        run: |
+          BRANCH="release/${VERSION}"
+          git fetch origin
+
+          if ! git show-ref --verify --quiet refs/remotes/origin/$BRANCH; then
+            echo "❌ Branch $BRANCH não encontrada"
+            exit 1
+          fi
+
+          echo "RELEASE_BRANCH=$BRANCH" >> $GITHUB_ENV
+
+      # 🔀 Merge automático → main
+      - name: Merge release into main
+        run: |
+          git checkout main
+          git pull origin main
+
+          git merge origin/${RELEASE_BRANCH} \
+            --no-ff \
+            -m "chore: merge ${RELEASE_BRANCH} into main [release ${TAG}]"
+
+          git push origin main
+
+      # 🔎 Encontrar RC
+      - name: Find matching RC
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-
-          echo "Looking for RC matching $TAG..."
-
           RC_TAG=$(gh release list \
             --json tagName,name,isDraft \
             --jq ".[] | select(.isDraft==true and (.name | contains(\"$TAG\"))) | .tagName" \
             | head -n 1)
 
           if [ -z "$RC_TAG" ]; then
-            echo "❌ Nenhum RC compatível encontrado para $TAG"
+            echo "❌ Nenhum RC encontrado"
             exit 1
           fi
 
           echo "RC_TAG=$RC_TAG" >> $GITHUB_ENV
-          echo "Using RC: $RC_TAG"
 
-      - name: Promote RC to official release
+      # 🚀 Promover release
+      - name: Promote RC
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
