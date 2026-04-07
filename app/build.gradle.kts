@@ -3,9 +3,8 @@ plugins {
 }
 
 android {
-    namespace = "com.kotlinimc"
-    compileSdk {
-        version = release(36)
+    namespace = "com.kotlinimc"git add.
+    compileSdk = 36
     }
 
 defaultConfig {
