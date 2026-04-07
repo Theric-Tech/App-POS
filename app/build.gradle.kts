@@ -3,7 +3,7 @@ plugins {
 }
 
 android {
-    namespace = "com.kotlinimc"git add.
+    namespace = "com.kotlinimc"
     compileSdk = 36
     }
 
