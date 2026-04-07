@@ -15,7 +15,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: ./.github/actions/ci-base
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      - name: CI Base
+        uses: ./.github/actions/ci-base
 
       - name: Build Debug APK
         run: ./gradlew assembleDebug --no-daemon --stacktrace
