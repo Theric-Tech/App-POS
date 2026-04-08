@@ -4,23 +4,21 @@ plugins {
 
 android {
     namespace = "com.kotlinimc"
-    compileSdk {
-        version = release(36)
+    compileSdk = 36
+
+    defaultConfig {
+        applicationId = "com.kotlinimc"
+        minSdk = 24
+        targetSdk = 36
+
+        val versionCodeProp = project.findProperty("VERSION_CODE")?.toString()
+        val versionNameProp = project.findProperty("VERSION_NAME")?.toString()
+
+        versionCode = versionCodeProp?.toInt() ?: 1
+        versionName = versionNameProp ?: "1.0"
+
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
-
-defaultConfig {
-    applicationId = "com.kotlinimc"
-    minSdk = 24
-    targetSdk = 36
-
-    val versionCodeProp = project.findProperty("VERSION_CODE")?.toString()
-    val versionNameProp = project.findProperty("VERSION_NAME")?.toString()
-
-    versionCode = versionCodeProp?.toInt() ?: 1
-    versionName = versionNameProp ?: "1.0"
-
-    testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-}
 
     buildTypes {
         release {
@@ -31,12 +29,13 @@ defaultConfig {
             )
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
 
-    buildFeatures{
+    buildFeatures {
         viewBinding = true
     }
 }
