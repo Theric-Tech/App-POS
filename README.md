@@ -315,3 +315,5 @@ Se houver dúvidas ou necessidade de evolução do pipeline, documentar as mudan
 07/04 - 9:19
 07/09 - 9:29
 
+08/04 - 9:30
+
