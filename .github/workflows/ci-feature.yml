@@ -1,4 +1,4 @@
-name: CI #1 - Feature Validation
+name: CI - Feature
 
 on:
   push:
