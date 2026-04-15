@@ -1,4 +1,4 @@
-name: CI #2 - DEV Integration
+name: CI - DEV
 
 on:
   pull_request:
